@@ -2,10 +2,12 @@ import path from "node:path";
 
 const root = process.cwd();
 
+// Paths are resolved at runtime from the working directory (this is a local, single-machine app),
+// so tell Turbopack not to trace the whole project for these joins.
 function resolveFromRoot(value: string) {
-  return path.isAbsolute(value) ? value : path.join(root, value);
+  return path.isAbsolute(value) ? value : path.join(/*turbopackIgnore: true*/ root, value);
 }
 
 export const databasePath = resolveFromRoot(process.env.DATABASE_PATH ?? "data/app.db");
 export const uploadsDir = resolveFromRoot(process.env.UPLOADS_DIR ?? "data/uploads");
-export const migrationsDir = path.join(root, "src", "db", "migrations");
+export const migrationsDir = path.join(/*turbopackIgnore: true*/ root, "src", "db", "migrations");

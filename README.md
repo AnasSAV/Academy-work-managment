@@ -77,6 +77,26 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 | `npm run db:generate`             | Generate a migration after editing the schema |
 | `npm run db:reset`                | Delete the local database (asks first)        |
 
+## Using the app
+
+- **Semesters** (home page): add, edit, reorder and delete semesters. On an empty database you can load the Semester 07 starter data with one click.
+- **Modules** (semester page): name, code, credits, lecturers, colour, target grade, exam date and notes. Reorder with the arrow buttons.
+- **Chapters** (module page): type a title and press Enter to add one, or paste a list to add several at once (one per line). Rename, reorder and delete from each row.
+- **Deleting** always asks first and lists what else would be removed with it (for example a module's chapters and assessments).
+
+## Project layout
+
+| Path                             | Contents                                                      |
+| -------------------------------- | ------------------------------------------------------------- |
+| [src/app](src/app)               | Pages and layout (Next.js App Router)                         |
+| [src/actions](src/actions)       | Server actions: validate input, call a service, refresh pages |
+| [src/db](src/db)                 | Schema, migrations, queries and services (plain functions)    |
+| [src/lib](src/lib)               | Validation schemas, defaults, formatting helpers              |
+| [src/components](src/components) | UI components (shadcn/ui primitives live in `components/ui`)  |
+| [tests](tests)                   | Vitest tests, run against an in-memory database               |
+
+Services in `src/db` take the database as a parameter, so they are tested against an in-memory SQLite database without touching your real data.
+
 ## Roadmap
 
 | Version | Milestone                                    |
