@@ -14,14 +14,19 @@ export const DEFAULT_SETTINGS = {
   reviseAfterDays: 14,
 } as const;
 
-/** Distinct module colours, assigned in order. */
+/**
+ * Default module colours, assigned in order. These are the first slots of the validated
+ * categorical palette: neighbours stay distinguishable under colour-vision deficiency (adjacent
+ * separation of at least 8 in OKLab x100 in light mode) and for full-colour readers (at least 15).
+ * Some sit below 3:1 contrast on white, so a colour is only ever a small mark beside a text label.
+ */
 export const MODULE_COLORS = [
-  "#3b82f6",
-  "#8b5cf6",
-  "#f59e0b",
-  "#10b981",
-  "#ec4899",
-  "#ef4444",
-  "#06b6d4",
-  "#84cc16",
+  "#2a78d6",
+  "#eb6834",
+  "#1baf7a",
+  "#eda100",
+  "#e87ba4",
+  "#008300",
+  "#4a3aa7",
+  "#e34948",
 ] as const;

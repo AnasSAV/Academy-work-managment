@@ -17,6 +17,7 @@ export function ModuleTabs({ moduleId, counts }: ModuleTabsProps) {
     { href: base, label: "Chapters", count: counts.chapters },
     { href: `${base}/assessments`, label: "Assessments", count: counts.assessments },
     { href: `${base}/papers`, label: "Past papers", count: counts.pastPapers },
+    { href: `${base}/insights`, label: "Insights", count: null },
   ];
 
   return (
@@ -36,7 +37,9 @@ export function ModuleTabs({ moduleId, counts }: ModuleTabsProps) {
             )}
           >
             {tab.label}
-            <span className="bg-muted rounded-full px-1.5 text-xs tabular-nums">{tab.count}</span>
+            {tab.count !== null && (
+              <span className="bg-muted rounded-full px-1.5 text-xs tabular-nums">{tab.count}</span>
+            )}
           </Link>
         );
       })}

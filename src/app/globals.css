@@ -128,3 +128,34 @@
     @apply font-sans;
   }
 }
+
+/*
+ * Chart tokens. Values come from the validated data-viz palette (adjacent colour-vision
+ * separation, lightness band and contrast checked per mode). Charts are written against these
+ * roles, never against raw hex, so light and dark swap in one place.
+ */
+:root {
+  --viz-series-1: #2a78d6;
+  /* Sequential / ordinal ramp, one hue: more = darker on light surfaces. */
+  --viz-ramp-1: #86b6ef;
+  --viz-ramp-2: #3987e5;
+  --viz-ramp-3: #1c5cab;
+  --viz-ramp-4: #0d366b;
+  --viz-empty: #e1e0d9;
+  --viz-grid: #e1e0d9;
+  --viz-axis: #c3c2b7;
+  --viz-muted: #898781;
+}
+
+.dark {
+  --viz-series-1: #3987e5;
+  /* Dark surfaces flip the anchor: more = lighter. */
+  --viz-ramp-1: #184f95;
+  --viz-ramp-2: #2a78d6;
+  --viz-ramp-3: #5598e7;
+  --viz-ramp-4: #9ec5f4;
+  --viz-empty: #2c2c2a;
+  --viz-grid: #2c2c2a;
+  --viz-axis: #383835;
+  --viz-muted: #898781;
+}

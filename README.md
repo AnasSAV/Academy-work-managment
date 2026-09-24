@@ -18,7 +18,7 @@ Semester -> Module -> Chapter -> Study activities
 ## Tech stack
 
 - Next.js (App Router) and TypeScript
-- Tailwind CSS, shadcn/ui, Recharts
+- Tailwind CSS, shadcn/ui; charts are hand-built server-rendered SVG/HTML (no chart library)
 - SQLite through Drizzle ORM (migrations are checked in)
 - Zod for validation, Vitest for tests, ESLint and Prettier for code quality
 
@@ -83,12 +83,24 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 - **Modules** (semester page): name, code, credits, lecturers, colour, target grade, exam date and notes. Reorder with the arrow buttons.
 - **Chapters** (module page): type a title and press Enter to add one, or paste a list to add several at once (one per line). Rename, reorder and delete from each row.
 - **Progress**: tick Learned, Questions done, Notes made and Revised on each chapter row, or open a chapter for question counts (done / total), repeated revisions, confidence (1-5), last-reviewed date, a note and a OneNote link. Add your own activities (with a weight) under **Activities** on a module page.
+- **Dashboard** (home page): a completion ring for the semester, a bar per module, and a chapter heatmap (modules by chapters). Hover or focus any square for details; click it to open the chapter. Every chart has a **Table view** with the same numbers. If you have several semesters, switch between them with the chips at the top.
+- **Insights** (module page, Insights tab): progress per activity, a past-paper score trend (with your target grade as a reference line) and the assessment weight split by status.
 - **Assessments** (module page, Assessments tab): one row per graded component, with weight, lecturer, due date, status, score (out of any maximum) and notes. Mark each as **Individual**, **Group** (with an optional size and members note) or **Unspecified**. A warning appears whenever a module's weights do not add up to 100%.
 - **Tags**: your own labels per module (for example `*`, "online", "proctored"). Give each a description of what it means, tick tags on an assessment, or type new ones separated by commas. Filter the list by work mode and tag; the summary shows the weight per work mode.
 - **Past papers** (module page, Past papers tab): year, title, attempted or not, score, time taken, date and notes. Attach the paper and its marking scheme. Attempted papers count towards the module's readiness.
 - **Files**: upload files to a semester, module or chapter (the module page has a slot for the module outline). PDFs and images open in the app; other types (docx, pptx and so on) download. Deleting a chapter, module or semester deletes its files too, and the confirmation says how many.
 - **Settings**: the readiness split and the revise-after interval, with the formulas explained.
 - **Deleting** always asks first and lists what else would be removed with it (for example a module's chapters and assessments).
+
+## Charts and colour
+
+Charts follow a documented data-visualisation method, so they stay readable for everyone:
+
+- **Colour has one job each.** Module colours identify modules (the first slots of a categorical palette). The heatmap and the assessment donut use a single-hue ramp where darker means further along. Text never takes a series colour.
+- **The palette is validated, not eyeballed.** Module colours were checked for separation under protanopia and deuteranopia and for full-colour readers. The defaults are `#2a78d6`, `#eb6834`, `#1baf7a`, `#eda100`, `#e87ba4`, `#008300`, `#4a3aa7`, `#e34948`, in that order. If you pick your own module colour, keep neighbouring modules clearly different.
+- **Nothing depends on colour or hover.** Every chart has a table view, a legend or colour key, and tooltips that also appear on keyboard focus.
+- **Light and dark tokens** live in [src/app/globals.css](src/app/globals.css) (`--viz-*`).
+- **Semester completion** is the average readiness of the semester's modules. A chapter counts as complete when it rounds to 100%.
 
 ## Files and uploads
 
