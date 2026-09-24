@@ -1,27 +1,19 @@
-import {
-  CalendarDays,
-  Columns3,
-  GraduationCap,
-  LayoutDashboard,
-  ListChecks,
-  Settings,
-} from "lucide-react";
-import Link from "next/link";
+import { CalendarDays, Columns3, LayoutDashboard, ListChecks, Settings } from "lucide-react";
 import { getDb } from "@/db";
 import { listNav } from "@/db/queries";
+import { AppTools } from "@/components/app-tools";
 import { NavLink } from "@/components/nav-link";
+import { SidebarShell } from "@/components/sidebar-shell";
 
 export function AppSidebar() {
   const semesters = listNav(getDb());
+  const modules = semesters.flatMap((s) =>
+    s.modules.map((m) => ({ id: m.id, name: m.name, semesterName: s.name })),
+  );
 
   return (
-    <aside className="bg-card border-b md:sticky md:top-0 md:h-screen md:w-64 md:shrink-0 md:overflow-y-auto md:border-r md:border-b-0">
+    <SidebarShell>
       <nav aria-label="Main" className="flex flex-col gap-4 p-3">
-        <Link href="/" className="flex items-center gap-2 px-2 py-1.5 font-semibold">
-          <GraduationCap className="size-5" aria-hidden />
-          Academy Work
-        </Link>
-
         <div className="flex flex-col gap-0.5">
           <NavLink href="/">
             <LayoutDashboard className="size-4" aria-hidden />
@@ -63,11 +55,14 @@ export function AppSidebar() {
           </div>
         ))}
 
-        <NavLink href="/settings" className="text-muted-foreground">
-          <Settings className="size-4" aria-hidden />
-          Settings
-        </NavLink>
+        <div className="flex flex-col gap-0.5 border-t pt-3">
+          <NavLink href="/settings" className="text-muted-foreground">
+            <Settings className="size-4" aria-hidden />
+            Settings
+          </NavLink>
+          <AppTools modules={modules} />
+        </div>
       </nav>
-    </aside>
+    </SidebarShell>
   );
 }

@@ -2,7 +2,7 @@
 
 A small, local-first web app for tracking academic progress across semesters, modules, chapters, past papers and assessments, with visual progress tracking. Single user, no accounts, no cloud: everything is stored on your own machine.
 
-> Status: early development. See [Roadmap](#roadmap).
+> Status: v1.0.0. All roadmap milestones are done. See [Roadmap](#roadmap).
 
 ## Concept
 
@@ -61,6 +61,14 @@ npm run seed:demo
 
 The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are generated with Drizzle and checked in under [src/db/migrations](src/db/migrations). After changing the schema, run `npm run db:generate` and commit the new migration.
 
+### Backups
+
+```bash
+npm run db:backup
+```
+
+This writes `data/backups/app-YYYYMMDD-HHMMSS.db` using SQLite's online backup, so it is safe to run while the app is open and never overwrites an earlier backup. Do not copy `data/app.db` by hand instead: the database runs in write-ahead mode, so recent changes can still be sitting in the `app.db-wal` file and a plain copy of `app.db` can miss them. To restore, stop the app and replace `data/app.db` with a backup (delete `app.db-wal` and `app.db-shm` next to it first). Uploaded files are not part of the database; copy `data/uploads/` as well. `data/` is git-ignored, so backups are never pushed.
+
 ### Scripts
 
 | Script                            | What it does                                  |
@@ -75,6 +83,7 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 | `npm run db:seed`                 | Load Semester 07, modules and CN&S chapters   |
 | `npm run seed:demo`               | Optional: add demo Advanced ML assessments    |
 | `npm run db:generate`             | Generate a migration after editing the schema |
+| `npm run db:backup`               | Save a safe copy of the database              |
 | `npm run db:reset`                | Delete the local database (asks first)        |
 
 ## Using the app
@@ -95,6 +104,30 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 - **Files**: upload files to a semester, module or chapter (the module page has a slot for the module outline). PDFs and images open in the app; other types (docx, pptx and so on) download. Deleting a chapter, module or semester deletes its files too, and the confirmation says how many.
 - **Settings**: the readiness split and the revise-after interval, with the formulas explained.
 - **Deleting** always asks first and lists what else would be removed with it (for example a module's chapters and assessments).
+- **Quick add** (sidebar or `N`): add chapters, an assessment or a past paper to any module from any page, without navigating there first. It starts on the module you are looking at, and errors show inline like everywhere else.
+- **Theme** (sidebar or `T`): System, Light or Dark. System follows your operating system and changes with it; your choice is remembered in the browser and applied before the page paints, so there is no flash.
+- **On a phone** the sidebar folds behind a Menu button and closes when you pick a page.
+
+### Keyboard shortcuts
+
+Shortcuts are ignored while you are typing in a field or a dialog is open, and when Ctrl, Cmd or Alt is held. Press `?` in the app to see the list.
+
+| Keys         | Action                 |
+| ------------ | ---------------------- |
+| `G` then `D` | Go to the dashboard    |
+| `G` then `B` | Go to the board        |
+| `G` then `C` | Go to the calendar     |
+| `G` then `R` | Go to review           |
+| `G` then `S` | Go to settings         |
+| `N`          | Quick add              |
+| `T`          | Switch theme           |
+| `?`          | Show the shortcut list |
+
+The second key of a `G` pair must follow within about a second and a half.
+
+### Accessibility
+
+Text meets 4.5:1 contrast in light and dark. An automated scan (axe-core) of every main page in both themes finds no serious or critical problems. There is a "Skip to main content" link, every chart has a table view, and nothing depends on hover alone.
 
 ## Charts and colour
 
@@ -170,21 +203,22 @@ All formulas are pure functions in [src/lib/progress.ts](src/lib/progress.ts), c
 | [src/db](src/db)                 | Schema, migrations, queries and services (plain functions)    |
 | [src/lib](src/lib)               | Validation schemas, defaults, formatting helpers              |
 | [src/components](src/components) | UI components (shadcn/ui primitives live in `components/ui`)  |
+| [scripts](scripts)               | Command-line scripts: seed, demo seed, backup, reset          |
 | [tests](tests)                   | Vitest tests, run against an in-memory database               |
 
 Services in `src/db` take the database as a parameter, so they are tested against an in-memory SQLite database without touching your real data.
 
 ## Roadmap
 
-| Version | Milestone                                    |
-| ------- | -------------------------------------------- |
-| v0.1.0  | Scaffolding, tooling, README                 |
-| v0.2.0  | Database schema, migrations, seed            |
-| v0.3.0  | Semester / module / chapter CRUD             |
-| v0.4.0  | Chapter activities and progress calculations |
-| v0.5.0  | File uploads and inline viewer               |
-| v0.6.0  | Past papers and assessments                  |
-| v0.7.0  | Dashboard visualisations                     |
-| v0.8.0  | Grade tracker and what-if calculator         |
-| v0.9.0  | Board, calendar, revision reminders          |
-| v1.0.0  | Polish: dark mode, empty states, docs        |
+| Version | Milestone                                     |
+| ------- | --------------------------------------------- |
+| v0.1.0  | Scaffolding, tooling, README                  |
+| v0.2.0  | Database schema, migrations, seed             |
+| v0.3.0  | Semester / module / chapter CRUD              |
+| v0.4.0  | Chapter activities and progress calculations  |
+| v0.5.0  | File uploads and inline viewer                |
+| v0.6.0  | Past papers and assessments                   |
+| v0.7.0  | Dashboard visualisations                      |
+| v0.8.0  | Grade tracker and what-if calculator          |
+| v0.9.0  | Board, calendar, revision reminders           |
+| v1.0.0  | Polish: dark mode, shortcuts, quick add, docs |

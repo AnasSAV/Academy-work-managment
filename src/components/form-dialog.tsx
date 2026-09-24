@@ -24,7 +24,11 @@ const FieldErrorsContext = createContext<FieldErrors>({});
 interface FormDialogProps<T> {
   title: string;
   description?: string;
-  triggerLabel: ReactNode;
+  /** The button that opens the dialog. Omit it when the dialog is opened from code (`open`). */
+  triggerLabel?: ReactNode;
+  /** Control the dialog from outside: pass `open` and `onOpenChange` together. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   triggerVariant?: "default" | "outline" | "ghost" | "secondary";
   triggerSize?: "default" | "sm" | "xs" | "icon" | "icon-sm" | "icon-xs";
   triggerAriaLabel?: string;
@@ -41,6 +45,8 @@ export function FormDialog<T>({
   title,
   description,
   triggerLabel,
+  open: openProp,
+  onOpenChange,
   triggerVariant = "default",
   triggerSize = "default",
   triggerAriaLabel,
@@ -51,7 +57,12 @@ export function FormDialog<T>({
   className,
   children,
 }: FormDialogProps<T>) {
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = openProp ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    setInternalOpen(next);
+    onOpenChange?.(next);
+  };
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [pending, startTransition] = useTransition();
@@ -82,13 +93,15 @@ export function FormDialog<T>({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogTrigger
-        render={
-          <Button variant={triggerVariant} size={triggerSize} aria-label={triggerAriaLabel} />
-        }
-      >
-        {triggerLabel}
-      </DialogTrigger>
+      {triggerLabel !== undefined && (
+        <DialogTrigger
+          render={
+            <Button variant={triggerVariant} size={triggerSize} aria-label={triggerAriaLabel} />
+          }
+        >
+          {triggerLabel}
+        </DialogTrigger>
+      )}
       <DialogContent className={cn("sm:max-w-md", className)}>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
