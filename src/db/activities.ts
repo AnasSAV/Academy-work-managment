@@ -136,6 +136,21 @@ export function adjustRevision(db: Db, chapterId: number, delta: 1 | -1, today: 
   if (delta === 1) markReviewed(db, chapterId, today);
 }
 
+/**
+ * Mark every activity of a chapter done, in one transaction. Ticking Revised counts as a first
+ * revision and stamps the last-reviewed date, exactly as ticking it by hand does.
+ */
+export function completeChapter(db: Db, chapterId: number, today: string) {
+  const chapter = db.select().from(chapters).where(eq(chapters.id, chapterId)).get();
+  if (!chapter) throw new NotFoundError("Chapter");
+  db.transaction((tx) => {
+    const t = tx as unknown as Db;
+    for (const type of listActivityTypes(t, chapter.moduleId)) {
+      setActivityDone(t, chapterId, type.id, true, today);
+    }
+  });
+}
+
 export function updateChapterDetails(db: Db, chapterId: number, input: ChapterDetailsInput) {
   const row = db.update(chapters).set(input).where(eq(chapters.id, chapterId)).returning().get();
   if (!row) throw new NotFoundError("Chapter");

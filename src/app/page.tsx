@@ -1,13 +1,17 @@
 import Link from "next/link";
 import { getDb } from "@/db";
 import { loadSemesterDashboard } from "@/db/dashboard-queries";
-import { listNav } from "@/db/queries";
+import { selectSemester } from "@/db/queries";
+import { loadStudy } from "@/db/study-queries";
 import { getSettings } from "@/db/settings";
 import { todayISO } from "@/lib/dates";
-import { HEAT_LABELS, heatLevel, pickCurrentSemester } from "@/lib/dashboard";
+import { HEAT_LABELS, heatLevel } from "@/lib/dashboard";
+import { upcomingItems } from "@/lib/study";
 import { formatDateRange, pluralize } from "@/lib/format";
 import { toPercent } from "@/lib/progress";
-import { FilterChip } from "@/components/filter-chip";
+import { AttentionList } from "@/components/attention-list";
+import { DeadlineList } from "@/components/deadline-list";
+import { SemesterChips } from "@/components/semester-chips";
 import { SemesterDialog } from "@/components/semester-dialog";
 import { StarterDataButton } from "@/components/starter-data-button";
 import { BarList } from "@/components/viz/bar-list";
@@ -21,9 +25,15 @@ const single = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : 
 export default async function Dashboard(props: PageProps<"/">) {
   const query = await props.searchParams;
   const db = getDb();
-  const semesters = listNav(db);
+  const today = todayISO();
+  const requested = Number(single(query.semester));
+  const { semesters, current } = selectSemester(
+    db,
+    Number.isInteger(requested) ? requested : null,
+    today,
+  );
 
-  if (semesters.length === 0) {
+  if (!current) {
     return (
       <div className="space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
@@ -44,10 +54,15 @@ export default async function Dashboard(props: PageProps<"/">) {
     );
   }
 
-  const requested = Number(single(query.semester));
-  const semester =
-    semesters.find((s) => s.id === requested) ?? pickCurrentSemester(semesters, todayISO())!;
-  const data = loadSemesterDashboard(db, semester, getSettings(db));
+  const semester = current;
+  const settings = getSettings(db);
+  const data = loadSemesterDashboard(db, semester, settings);
+  const study = loadStudy(db, semester, settings, today);
+  const upcoming = upcomingItems(study.items).slice(0, 5);
+  const attention = study.chapters
+    .filter((c) => c.attention)
+    .sort((a, b) => b.attention!.score - a.attention!.score)
+    .slice(0, 5);
   const { totals } = data;
   const dates = formatDateRange(semester.startDate, semester.endDate);
 
@@ -90,16 +105,7 @@ export default async function Dashboard(props: PageProps<"/">) {
         </div>
       </header>
 
-      {semesters.length > 1 && (
-        <nav aria-label="Semester" className="flex flex-wrap items-center gap-1.5">
-          <span className="text-muted-foreground mr-1 text-xs">Semester</span>
-          {semesters.map((s) => (
-            <FilterChip key={s.id} href={`/?semester=${s.id}`} active={s.id === semester.id}>
-              {s.name}
-            </FilterChip>
-          ))}
-        </nav>
-      )}
+      <SemesterChips semesters={semesters} currentId={semester.id} basePath="/" />
 
       <section
         aria-labelledby="completion-heading"
@@ -132,6 +138,38 @@ export default async function Dashboard(props: PageProps<"/">) {
           </div>
         </div>
       </section>
+
+      <div className="grid gap-6 lg:grid-cols-2">
+        <section aria-labelledby="upcoming-heading" className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="upcoming-heading" className="text-base font-medium">
+              Coming up
+            </h2>
+            <Link href="/calendar" className="text-muted-foreground text-sm hover:underline">
+              Calendar
+            </Link>
+          </div>
+          <DeadlineList
+            items={upcoming}
+            ariaLabel="Coming up"
+            emptyText="No upcoming deadlines or exams. Add a due date to an assessment, or an exam date to a module."
+          />
+        </section>
+        <section aria-labelledby="attention-heading" className="space-y-3">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 id="attention-heading" className="text-base font-medium">
+              Needs attention
+            </h2>
+            <Link href="/review" className="text-muted-foreground text-sm hover:underline">
+              Review
+            </Link>
+          </div>
+          <AttentionList
+            chapters={attention}
+            emptyText="All clear. Nothing needs attention right now."
+          />
+        </section>
+      </div>
 
       {data.modules.length === 0 ? (
         <p className="text-muted-foreground rounded-lg border border-dashed p-8 text-center text-sm">

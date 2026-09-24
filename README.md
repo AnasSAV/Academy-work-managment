@@ -87,6 +87,9 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 - **Insights** (module page, Insights tab): progress per activity, a past-paper score trend (with your target grade as a reference line) and the assessment weight split by status.
 - **Assessments** (module page, Assessments tab): one row per graded component, with weight, lecturer, due date, status, score (out of any maximum) and notes. Mark each as **Individual**, **Group** (with an optional size and members note) or **Unspecified**. A warning appears whenever a module's weights do not add up to 100%.
 - **Tags**: your own labels per module (for example `*`, "online", "proctored"). Give each a description of what it means, tick tags on an assessment, or type new ones separated by commas. Filter the list by work mode and tag; the summary shows the weight per work mode.
+- **Board** (sidebar): every chapter in the semester in four columns, To learn, Learning, Revising and Done. A card's column comes from what you have ticked, so it can never disagree with the chapter; each card has one button for the next step (mark learned, log a revision, mark complete). Filter by module.
+- **Calendar** (sidebar): a Monday-first month view of assessment due dates and exam dates, with the same items in a list underneath (the list is all you get on a phone). Turn on **Revision reminders** to see when each learned chapter is next due back.
+- **Review** (sidebar): the exam countdown, upcoming deadlines (overdue ones first), chapters due for revision with a one-click **Log revision**, and a ranked **Needs attention** list. The dashboard shows the top of both lists.
 - **Grades** (module page, Grades tab): your grade so far, the average on graded work, the weight still to come, and the best you can still reach. Set a target grade on the module and it says what average you need on the rest, or that the target is already secured, out of reach, or missed. The **What if?** calculator lets you try any target and any scores on the work that is left. Nothing typed there is saved.
 - **Past papers** (module page, Past papers tab): year, title, attempted or not, score, time taken, date and notes. Attach the paper and its marking scheme. Attempted papers count towards the module's readiness.
 - **Files**: upload files to a semester, module or chapter (the module page has a slot for the module outline). PDFs and images open in the app; other types (docx, pptx and so on) download. Deleting a chapter, module or semester deletes its files too, and the confirmation says how many.
@@ -115,6 +118,15 @@ Uploads are served back through `/api/attachments/<id>`. A few deliberate safety
 - Stored paths are checked to stay inside the uploads folder.
 
 Because `data/` is git-ignored, your course files are never pushed to GitHub.
+
+## Board, revision and attention rules
+
+The logic is in [src/lib/study.ts](src/lib/study.ts), covered by tests.
+
+- **Board columns** come from what is ticked. _Done_: every activity is complete. _Revising_: revised at least once, not finished. _Learning_: something is ticked or counted, not yet revised. _To learn_: nothing done.
+- **Revision timing.** Only chapters you have learned come due. The interval is the "Revise after" setting (Settings, default 14 days) times a confidence factor (1 = 0.25x, 2 = 0.5x, 3 or unrated = 1x, 4 = 1.5x, 5 = 2.5x), stretched 1.5x for each revision already logged, up to three. The clock starts at the last review, else the day you learned it. Logging a revision resets it.
+- **Needs attention** flags: revision overdue or due today, low confidence (1 or 2), and chapters not started in a module that is under way or has an exam within 30 days. A chapter is ranked higher the later its revision is and the lower its confidence; an exam within 30 days raises anything already flagged (within 14 days more so). An exam on its own is not a reason.
+- **Deadlines.** Overdue assessments stay on the list until you mark them submitted or graded. Exams appear until the day has passed.
 
 ## Grade calculations
 

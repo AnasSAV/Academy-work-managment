@@ -17,3 +17,17 @@ export function daysBetween(from: string, to: string): number {
   };
   return Math.round((parse(to) - parse(from)) / 86_400_000);
 }
+
+/** "YYYY-MM-DD" plus a number of days (negative goes back). Works on calendar days, not hours. */
+export function addDays(iso: string, days: number): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  return toISODate(new Date(y, m - 1, d + days));
+}
+
+/** "Today", "Tomorrow", "In 5 days", "Yesterday", "3 days ago" for a signed day offset. */
+export function relativeDays(days: number): string {
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days === -1) return "Yesterday";
+  return days > 0 ? `In ${days} days` : `${-days} days ago`;
+}

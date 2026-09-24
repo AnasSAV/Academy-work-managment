@@ -3,6 +3,7 @@
 import { getDb } from "@/db";
 import {
   adjustRevision,
+  completeChapter,
   createActivityType,
   deleteActivityType,
   setActivityCounts,
@@ -59,6 +60,15 @@ export async function adjustRevisionAction(
   if (!chapter || (delta !== 1 && delta !== -1)) return failure("Invalid request");
   return guard(() => {
     adjustRevision(getDb(), chapter, delta, todayISO());
+    return nothing();
+  });
+}
+
+export async function completeChapterAction(chapterId: number): Promise<ActionResult> {
+  const chapter = parseId(chapterId);
+  if (!chapter) return failure("Invalid request");
+  return guard(() => {
+    completeChapter(getDb(), chapter, todayISO());
     return nothing();
   });
 }

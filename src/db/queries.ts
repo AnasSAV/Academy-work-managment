@@ -1,4 +1,5 @@
 import { and, asc, count, eq } from "drizzle-orm";
+import { pickCurrentSemester } from "@/lib/dashboard";
 import type { Db } from "./index";
 import {
   activityTypes,
@@ -32,6 +33,17 @@ export function listNav(db: Db) {
     ...s,
     modules: moduleRows.filter((m) => m.semesterId === s.id),
   }));
+}
+
+/**
+ * The semester a page should show: the one asked for (by id), else the one running today, else the
+ * latest that has started, else the first. `current` is null only when there are no semesters.
+ */
+export function selectSemester(db: Db, requestedId: number | null, today: string) {
+  const semesters = listNav(db);
+  const current =
+    semesters.find((s) => s.id === requestedId) ?? pickCurrentSemester(semesters, today);
+  return { semesters, current };
 }
 
 export function listSemesterSummaries(db: Db) {

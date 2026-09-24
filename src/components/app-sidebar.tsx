@@ -1,4 +1,11 @@
-import { GraduationCap, Settings } from "lucide-react";
+import {
+  CalendarDays,
+  Columns3,
+  GraduationCap,
+  LayoutDashboard,
+  ListChecks,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { getDb } from "@/db";
 import { listNav } from "@/db/queries";
@@ -14,6 +21,25 @@ export function AppSidebar() {
           <GraduationCap className="size-5" aria-hidden />
           Academy Work
         </Link>
+
+        <div className="flex flex-col gap-0.5">
+          <NavLink href="/">
+            <LayoutDashboard className="size-4" aria-hidden />
+            Dashboard
+          </NavLink>
+          <NavLink href="/board">
+            <Columns3 className="size-4" aria-hidden />
+            Board
+          </NavLink>
+          <NavLink href="/calendar">
+            <CalendarDays className="size-4" aria-hidden />
+            Calendar
+          </NavLink>
+          <NavLink href="/review">
+            <ListChecks className="size-4" aria-hidden />
+            Review
+          </NavLink>
+        </div>
 
         {semesters.length === 0 && (
           <p className="text-muted-foreground px-2 text-sm">No semesters yet.</p>
