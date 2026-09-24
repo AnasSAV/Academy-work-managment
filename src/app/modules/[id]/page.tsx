@@ -5,10 +5,17 @@ import { moveChapterAction } from "@/actions/chapters";
 import { countLabel, formatDate, pluralize } from "@/lib/format";
 import { toPercent } from "@/lib/progress";
 import { getDb } from "@/db";
-import { activityRecordCounts, chapterActivityCounts, getModule } from "@/db/queries";
+import {
+  activityRecordCounts,
+  chapterActivityCounts,
+  chapterAttachmentCounts,
+  getModule,
+} from "@/db/queries";
 import { loadModuleProgress } from "@/db/progress-queries";
+import { listAttachments } from "@/db/attachments";
 import { getModuleDeleteImpact } from "@/db/services";
 import { getSettings } from "@/db/settings";
+import { AttachmentsPanel } from "@/components/attachments-panel";
 import { ActivityCheckbox } from "@/components/activity-controls";
 import { ActivityTypeDialog, DeleteActivityTypeButton } from "@/components/activity-type-controls";
 import { AddChaptersForm, RenameChapterDialog } from "@/components/chapter-controls";
@@ -37,8 +44,10 @@ export default async function ModulePage(props: PageProps<"/modules/[id]">) {
   const db = getDb();
   const progress = loadModuleProgress(db, [mod.id], getSettings(db)).get(mod.id)!;
   const activityCounts = chapterActivityCounts(db, mod.id);
+  const chapterFiles = chapterAttachmentCounts(db, mod.id);
   const typeRecordCounts = activityRecordCounts(db, mod.id);
   const impact = getModuleDeleteImpact(db, mod.id);
+  const hasOutline = listAttachments(db, "module", mod.id).some((f) => f.kind === "outline");
   const totalWeight = progress.types.reduce((sum, t) => sum + Math.max(0, t.weight), 0);
 
   const details = [
@@ -87,6 +96,7 @@ export default async function ModulePage(props: PageProps<"/modules/[id]">) {
                 countLabel(impact.activityRecords, "activity record"),
                 countLabel(impact.assessments, "assessment"),
                 countLabel(impact.pastPapers, "past paper"),
+                countLabel(impact.files, "file"),
               ]}
             />
           </div>
@@ -167,7 +177,10 @@ export default async function ModulePage(props: PageProps<"/modules/[id]">) {
                   <DeleteChapterButton
                     id={chapter.id}
                     title={chapter.title}
-                    impact={[countLabel(activityCounts.get(chapter.id) ?? 0, "activity record")]}
+                    impact={[
+                      countLabel(activityCounts.get(chapter.id) ?? 0, "activity record"),
+                      countLabel(chapterFiles.get(chapter.id) ?? 0, "file"),
+                    ]}
                   />
                 </div>
                 <div className="flex flex-wrap items-center gap-1.5 pl-8">
@@ -190,6 +203,14 @@ export default async function ModulePage(props: PageProps<"/modules/[id]">) {
 
         <AddChaptersForm moduleId={mod.id} />
       </section>
+
+      <AttachmentsPanel
+        ownerType="module"
+        ownerId={mod.id}
+        kinds={["outline", "slides", "notes", "past_paper", "marking_scheme", "other"]}
+        defaultKind={hasOutline ? "other" : "outline"}
+        description="The module outline, slides, notes and other material. PDFs and images open in the app."
+      />
 
       <section aria-labelledby="activities-heading" className="space-y-4">
         <div className="flex items-center justify-between gap-3">

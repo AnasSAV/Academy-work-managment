@@ -1,6 +1,13 @@
-import { asc, count, eq } from "drizzle-orm";
+import { and, asc, count, eq } from "drizzle-orm";
 import type { Db } from "./index";
-import { activityTypes, chapterActivities, chapters, modules, semesters } from "./schema";
+import {
+  activityTypes,
+  attachments,
+  chapterActivities,
+  chapters,
+  modules,
+  semesters,
+} from "./schema";
 
 /** Semesters with their modules (id, name, colour), for navigation. */
 export function listNav(db: Db) {
@@ -91,6 +98,21 @@ export function getChapter(db: Db, id: number) {
     .innerJoin(semesters, eq(semesters.id, modules.semesterId))
     .where(eq(chapters.id, id))
     .get();
+}
+
+/** Files attached to each chapter of a module (what a chapter delete would remove). */
+export function chapterAttachmentCounts(db: Db, moduleId: number) {
+  const rows = db
+    .select({ chapterId: attachments.ownerId, n: count() })
+    .from(attachments)
+    .innerJoin(
+      chapters,
+      and(eq(chapters.id, attachments.ownerId), eq(attachments.ownerType, "chapter")),
+    )
+    .where(eq(chapters.moduleId, moduleId))
+    .groupBy(attachments.ownerId)
+    .all();
+  return new Map(rows.map((r) => [r.chapterId, r.n]));
 }
 
 /** Recorded activity rows per activity type of a module (what deleting the type would remove). */

@@ -1,7 +1,9 @@
 "use server";
 
 import { getDb } from "@/db";
+import { uploadsDir } from "@/db/config";
 import { createModule, deleteModule, moveModule, updateModule } from "@/db/services";
+import { deleteStored } from "@/lib/storage";
 import { parseInput } from "@/lib/validation/parse";
 import { moduleSchema } from "@/lib/validation/schemas";
 import { failure, guard, parseDirection, parseId, type ActionResult } from "./helpers";
@@ -34,7 +36,11 @@ export async function deleteModuleAction(
 ): Promise<ActionResult<{ semesterId: number }>> {
   const moduleId = parseId(id);
   if (!moduleId) return failure("Invalid module");
-  return guard(() => ({ semesterId: deleteModule(getDb(), moduleId).semesterId }));
+  return guard(() => {
+    const { module, files } = deleteModule(getDb(), moduleId);
+    deleteStored(uploadsDir, files);
+    return { semesterId: module.semesterId };
+  });
 }
 
 export async function moveModuleAction(id: number, direction: string): Promise<ActionResult> {

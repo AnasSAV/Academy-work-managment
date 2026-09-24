@@ -1,7 +1,9 @@
 "use server";
 
 import { getDb } from "@/db";
+import { uploadsDir } from "@/db/config";
 import { createSemester, deleteSemester, moveSemester, updateSemester } from "@/db/services";
+import { deleteStored } from "@/lib/storage";
 import { parseInput } from "@/lib/validation/parse";
 import { semesterSchema } from "@/lib/validation/schemas";
 import { failure, guard, parseDirection, parseId, type ActionResult } from "./helpers";
@@ -29,7 +31,7 @@ export async function deleteSemesterAction(id: number): Promise<ActionResult> {
   const semesterId = parseId(id);
   if (!semesterId) return failure("Invalid semester");
   return guard(() => {
-    deleteSemester(getDb(), semesterId);
+    deleteStored(uploadsDir, deleteSemester(getDb(), semesterId).files);
     return undefined;
   });
 }

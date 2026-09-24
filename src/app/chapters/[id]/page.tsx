@@ -15,6 +15,7 @@ import {
   RevisionControls,
   ActivityCheckbox,
 } from "@/components/activity-controls";
+import { AttachmentsPanel } from "@/components/attachments-panel";
 import { ConfidenceDots } from "@/components/confidence";
 import { ProgressBar } from "@/components/progress-bar";
 import { buttonVariants } from "@/components/ui/button";
@@ -191,6 +192,13 @@ export default async function ChapterPage(props: PageProps<"/chapters/[id]">) {
           </div>
         </dl>
       </section>
+
+      <AttachmentsPanel
+        ownerType="chapter"
+        ownerId={chapter.id}
+        kinds={["notes", "slides", "other"]}
+        defaultKind="notes"
+      />
     </div>
   );
 }

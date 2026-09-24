@@ -83,8 +83,22 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 - **Modules** (semester page): name, code, credits, lecturers, colour, target grade, exam date and notes. Reorder with the arrow buttons.
 - **Chapters** (module page): type a title and press Enter to add one, or paste a list to add several at once (one per line). Rename, reorder and delete from each row.
 - **Progress**: tick Learned, Questions done, Notes made and Revised on each chapter row, or open a chapter for question counts (done / total), repeated revisions, confidence (1-5), last-reviewed date, a note and a OneNote link. Add your own activities (with a weight) under **Activities** on a module page.
+- **Files**: upload files to a semester, module or chapter (the module page has a slot for the module outline). PDFs and images open in the app; other types (docx, pptx and so on) download. Deleting a chapter, module or semester deletes its files too, and the confirmation says how many.
 - **Settings**: the readiness split and the revise-after interval, with the formulas explained.
 - **Deleting** always asks first and lists what else would be removed with it (for example a module's chapters and assessments).
+
+## Files and uploads
+
+Uploaded files live under `data/uploads/` (change with `UPLOADS_DIR`), in `<owner>/<id>/<random name>` folders. The database keeps the original name, type, size and owner. The size limit is 50 MB per file (`MAX_UPLOAD_MB`).
+
+Uploads are served back through `/api/attachments/<id>`. A few deliberate safety choices, since you are opening files from many sources:
+
+- **The file type is decided by the server, not the browser.** A PDF or image is shown inline only if its first bytes really match; a page renamed `.pdf` is stored as a plain download.
+- **Only PDFs and PNG/JPEG/GIF/WebP images are shown inline.** Everything else, including SVG (which can contain scripts), is sent as a download.
+- **Cross-site uploads are refused**, so another website open in your browser cannot push files into the app.
+- Stored paths are checked to stay inside the uploads folder.
+
+Because `data/` is git-ignored, your course files are never pushed to GitHub.
 
 ## How progress is calculated
 

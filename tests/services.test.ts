@@ -243,12 +243,14 @@ describe("delete impact and cascades", () => {
       chapters: 2,
       assessments: 1,
       pastPapers: 0,
+      files: 0,
     });
     expect(getModuleDeleteImpact(db, m.id)).toEqual({
       chapters: 2,
       assessments: 1,
       pastPapers: 0,
       activityRecords: 1,
+      files: 0,
     });
 
     deleteModule(db, m.id);

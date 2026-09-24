@@ -1,5 +1,11 @@
 import { count, eq, inArray } from "drizzle-orm";
 import type { ModuleInput, SemesterInput } from "@/lib/validation/schemas";
+import {
+  attachmentsForOwners,
+  deleteAttachmentsForOwners,
+  ownersUnderModule,
+  ownersUnderSemester,
+} from "./attachments";
 import { NotFoundError } from "./errors";
 import type { Db } from "./index";
 import { createModuleWithDefaults } from "./modules";
@@ -31,9 +37,17 @@ export function updateSemester(db: Db, id: number, input: SemesterInput) {
   return required(row, "Semester");
 }
 
+/**
+ * Delete a semester with its whole subtree. Attachment rows go in the same transaction; the
+ * returned `files` are the stored paths the caller must now remove from disk.
+ */
 export function deleteSemester(db: Db, id: number) {
   required(db.select().from(semesters).where(eq(semesters.id, id)).get(), "Semester");
-  db.delete(semesters).where(eq(semesters.id, id)).run();
+  return db.transaction((tx) => {
+    const files = deleteAttachmentsForOwners(tx as unknown as Db, ownersUnderSemester(db, id));
+    tx.delete(semesters).where(eq(semesters.id, id)).run();
+    return { files };
+  });
 }
 
 export function moveSemester(db: Db, id: number, direction: Direction) {
@@ -50,6 +64,7 @@ export function getSemesterDeleteImpact(db: Db, id: number) {
     chapters: countIn(chapters),
     assessments: countIn(assessments),
     pastPapers: countIn(pastPapers),
+    files: attachmentsForOwners(db, ownersUnderSemester(db, id)).length,
   };
 }
 
@@ -68,8 +83,12 @@ export function updateModule(db: Db, id: number, input: ModuleInput) {
 
 export function deleteModule(db: Db, id: number) {
   const row = required(db.select().from(modules).where(eq(modules.id, id)).get(), "Module");
-  db.delete(modules).where(eq(modules.id, id)).run();
-  return row;
+  const files = db.transaction((tx) => {
+    const paths = deleteAttachmentsForOwners(tx as unknown as Db, ownersUnderModule(db, id));
+    tx.delete(modules).where(eq(modules.id, id)).run();
+    return paths;
+  });
+  return { module: row, files };
 }
 
 export function moveModule(db: Db, id: number, direction: Direction) {
@@ -90,6 +109,7 @@ export function getModuleDeleteImpact(db: Db, id: number) {
       .from(chapterActivities)
       .where(inArray(chapterActivities.chapterId, chapterIds))
       .get()!.n,
+    files: attachmentsForOwners(db, ownersUnderModule(db, id)).length,
   };
 }
 
@@ -115,8 +135,12 @@ export function renameChapter(db: Db, id: number, title: string) {
 
 export function deleteChapter(db: Db, id: number) {
   const row = required(db.select().from(chapters).where(eq(chapters.id, id)).get(), "Chapter");
-  db.delete(chapters).where(eq(chapters.id, id)).run();
-  return row;
+  const files = db.transaction((tx) => {
+    const paths = deleteAttachmentsForOwners(tx as unknown as Db, [{ type: "chapter", id }]);
+    tx.delete(chapters).where(eq(chapters.id, id)).run();
+    return paths;
+  });
+  return { chapter: row, files };
 }
 
 export function moveChapter(db: Db, id: number, direction: Direction) {
@@ -131,5 +155,6 @@ export function getChapterDeleteImpact(db: Db, id: number) {
       .from(chapterActivities)
       .where(eq(chapterActivities.chapterId, id))
       .get()!.n,
+    files: attachmentsForOwners(db, [{ type: "chapter", id }]).length,
   };
 }

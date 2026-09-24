@@ -10,6 +10,7 @@ import { loadModuleProgress } from "@/db/progress-queries";
 import { getSemesterDeleteImpact } from "@/db/services";
 import { getSettings } from "@/db/settings";
 import { toPercent } from "@/lib/progress";
+import { AttachmentsPanel } from "@/components/attachments-panel";
 import { DeleteSemesterButton } from "@/components/delete-buttons";
 import { ModuleDialog } from "@/components/module-dialog";
 import { ProgressBar } from "@/components/progress-bar";
@@ -68,6 +69,7 @@ export default async function SemesterPage(props: PageProps<"/semesters/[id]">) 
                 countLabel(impact.chapters, "chapter"),
                 countLabel(impact.assessments, "assessment"),
                 countLabel(impact.pastPapers, "past paper"),
+                countLabel(impact.files, "file"),
               ]}
             />
           </div>
@@ -145,6 +147,14 @@ export default async function SemesterPage(props: PageProps<"/semesters/[id]">) 
           </ul>
         )}
       </section>
+
+      <AttachmentsPanel
+        ownerType="semester"
+        ownerId={semester.id}
+        kinds={["other", "notes", "slides"]}
+        defaultKind="other"
+        description="Timetables, handbooks and anything else for the whole semester."
+      />
     </div>
   );
 }

@@ -22,6 +22,25 @@ export function formatDate(iso: string | null | undefined): string | null {
   return dateFormat.format(new Date(y, m - 1, d));
 }
 
+/** "512 B", "1.4 KB", "12.3 MB". */
+export function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  const units = ["KB", "MB", "GB"];
+  let value = bytes / 1024;
+  let unit = 0;
+  while (value >= 1024 && unit < units.length - 1) {
+    value /= 1024;
+    unit++;
+  }
+  return `${value < 10 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+}
+
+/** Format a full ISO timestamp as a date, e.g. "24 Sept 2026". */
+export function formatTimestamp(iso: string): string | null {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : dateFormat.format(date);
+}
+
 /** "1 Feb 2026 – 30 Jun 2026", "From 1 Feb 2026", or null when neither date is set. */
 export function formatDateRange(start: string | null, end: string | null): string | null {
   const s = formatDate(start);
