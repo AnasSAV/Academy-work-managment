@@ -17,7 +17,10 @@
     "db:seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
     "seed:demo": "tsx --env-file-if-exists=.env scripts/seed-demo.ts",
     "db:reset": "tsx --env-file-if-exists=.env scripts/reset.ts",
-    "db:backup": "tsx --env-file-if-exists=.env scripts/backup.ts"
+    "db:backup": "tsx --env-file-if-exists=.env scripts/backup.ts",
+    "desktop": "node scripts/build-desktop.mjs run",
+    "dist:dir": "node scripts/build-desktop.mjs dir",
+    "dist": "node scripts/build-desktop.mjs dist"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -42,6 +45,8 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "drizzle-kit": "^0.31.11",
+    "electron": "^44.4.5",
+    "electron-builder": "^26.15.3",
     "eslint": "^9",
     "eslint-config-next": "16.3.6",
     "eslint-config-prettier": "^10.1.8",

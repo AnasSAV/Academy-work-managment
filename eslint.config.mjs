@@ -7,8 +7,22 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   prettier,
+  // The Electron main process is plain CommonJS.
+  {
+    files: ["desktop/**/*.cjs"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
   // Override default ignores of eslint-config-next.
-  globalIgnores([".next/**", "out/**", "build/**", "coverage/**", "data/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "coverage/**",
+    "data/**",
+    "desktop-build/**",
+    "release/**",
+    "next-env.d.ts",
+  ]),
 ]);
 
 export default eslintConfig;

@@ -1,0 +1,40 @@
+# Windows installer settings. Built by `npm run dist` (see scripts/build-desktop.mjs).
+appId: com.anassav.academyworkmanagement
+productName: Academy Work Management
+copyright: Copyright © AnasSAV
+
+directories:
+  app: desktop-build/app
+  output: release
+  buildResources: desktop/build
+
+# The web app's server travels next to the Electron shell, as plain files. It is copied in by
+# desktop/after-pack.cjs, because electron-builder's own copier drops node_modules folders.
+afterPack: desktop/after-pack.cjs
+
+# The shell has no npm dependencies of its own; without this, electron-builder would look upward
+# and pack the whole web app's node_modules into it.
+npmRebuild: false
+files:
+  - "**/*"
+  - "!node_modules"
+
+asar: true
+compression: normal
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  icon: desktop/build/icon.ico
+
+nsis:
+  oneClick: false # let the person pick the folder
+  perMachine: false # installs for the current user, so no administrator prompt
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: Academy Work Management
+  # Uninstalling removes the program, never the data in %APPDATA%.
+  deleteAppDataOnUninstall: false
+  artifactName: Academy-Work-Management-Setup-${version}.${ext}
