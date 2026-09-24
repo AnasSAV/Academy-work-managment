@@ -43,18 +43,39 @@ Then open http://localhost:3000.
 
 Copy `.env.example` to `.env` only if you want to change the defaults (database path, uploads directory, upload size limit). Everything works without it.
 
+### Database
+
+Data lives in a local SQLite file, `data/app.db` by default. It is created and migrated automatically the first time the app (or any `db:*` script) opens it, so `npm run dev` needs no setup step. To load the starting data:
+
+```bash
+npm run db:seed
+```
+
+This creates **Semester 07** with your six modules (each with its own colour) and the ten Computer Networks and Security chapters. It creates no assessments, past papers or files, and it is safe to run twice. Everything it creates can be renamed in the UI.
+
+Optional demo data (Advanced ML assessment table, with the `*` marker as a tag) is separate and only added if you ask for it:
+
+```bash
+npm run seed:demo
+```
+
+The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are generated with Drizzle and checked in under [src/db/migrations](src/db/migrations). After changing the schema, run `npm run db:generate` and commit the new migration.
+
 ### Scripts
 
-| Script                            | What it does                |
-| --------------------------------- | --------------------------- |
-| `npm run dev`                     | Start the dev server        |
-| `npm run build` / `npm start`     | Production build and server |
-| `npm run lint`                    | ESLint                      |
-| `npm run typecheck`               | TypeScript check            |
-| `npm test`                        | Run the Vitest suite        |
-| `npm run format` / `format:check` | Prettier write / check      |
-
-Database and seed scripts will be added in the next milestone.
+| Script                            | What it does                                  |
+| --------------------------------- | --------------------------------------------- |
+| `npm run dev`                     | Start the dev server                          |
+| `npm run build` / `npm start`     | Production build and server                   |
+| `npm run lint`                    | ESLint                                        |
+| `npm run typecheck`               | TypeScript check                              |
+| `npm test`                        | Run the Vitest suite                          |
+| `npm run format` / `format:check` | Prettier write / check                        |
+| `npm run db:migrate`              | Create or upgrade the database                |
+| `npm run db:seed`                 | Load Semester 07, modules and CN&S chapters   |
+| `npm run seed:demo`               | Optional: add demo Advanced ML assessments    |
+| `npm run db:generate`             | Generate a migration after editing the schema |
+| `npm run db:reset`                | Delete the local database (asks first)        |
 
 ## Roadmap
 
