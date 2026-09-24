@@ -2,7 +2,7 @@
 
 A small, local-first web app for tracking academic progress across semesters, modules, chapters, past papers and assessments, with visual progress tracking. Single user, no accounts, no cloud: everything is stored on your own machine.
 
-> Status: v1.0.0. All roadmap milestones are done. See [Roadmap](#roadmap).
+> Status: v1.1.0. All roadmap milestones are done, and there is a Windows installer. See [Roadmap](#roadmap).
 
 ## Concept
 
@@ -21,6 +21,7 @@ Semester -> Module -> Chapter -> Study activities
 - Tailwind CSS, shadcn/ui; charts are hand-built server-rendered SVG/HTML (no chart library)
 - SQLite through Drizzle ORM (migrations are checked in)
 - Zod for validation, Vitest for tests, ESLint and Prettier for code quality
+- Electron and electron-builder for the Windows desktop app (an optional wrapper around the same app)
 
 ## Privacy
 
@@ -85,6 +86,32 @@ This writes `data/backups/app-YYYYMMDD-HHMMSS.db` using SQLite's online backup, 
 | `npm run db:generate`             | Generate a migration after editing the schema |
 | `npm run db:backup`               | Save a safe copy of the database              |
 | `npm run db:reset`                | Delete the local database (asks first)        |
+| `npm run desktop`                 | Build and open the Windows desktop app        |
+| `npm run dist`                    | Build the Windows installer (in `release/`)   |
+| `npm run dist:dir`                | Build the desktop app unpacked                |
+
+## Desktop app (Windows)
+
+The app can be installed like any other program, with a Start-menu entry, a desktop shortcut and its own window. It is the same app, running on your own computer. Nothing is sent anywhere.
+
+**Install.** Run `Academy-Work-Management-Setup-<version>.exe`. It installs for your user only, so it does not ask for administrator rights, and you can choose the folder. The installer is not code-signed (a certificate costs money), so Windows SmartScreen may say "unknown publisher" the first time: choose **More info**, then **Run anyway**.
+
+**Your data** lives in `%APPDATA%\Academy Work Management\data` (the database, and your uploaded files in `uploads`). It is never inside the install folder, so upgrading, reinstalling and even uninstalling leave it alone. To back it up, close the app and copy that folder; **File, Open data folder** takes you there.
+
+**Bring in your existing data.** The installed app starts empty. To move over what you already have from `npm run dev`, use **File, Import data...** and choose either a backup file (run `npm run db:backup`, then pick the file in `data/backups`; this is the safest) or the project's whole `data` folder (close `npm run dev` first). Uploaded files come with it. What the app held before is moved to `backups/before-import-<time>` inside its data folder, so nothing is lost, and if the imported data does not open, the old data is put back.
+
+**Safety.** The app's server listens only on this computer (127.0.0.1) and turns away any request that names another site, which stops a web page in your browser from reading your data through it. Links to other sites open in your normal browser and never replace the app window. Only one copy can run at a time.
+
+**Build it yourself** (Windows only):
+
+```bash
+npm install
+npm run dist       # the installer, in release/
+npm run dist:dir   # the same app unpacked, in release/win-unpacked (handy for testing)
+npm run desktop    # build, then open it in a window without installing
+```
+
+The build refuses to continue if a database, uploads folder or `.env` file has ended up in what it would ship. `release/` and `desktop-build/` are git-ignored, so the installer is never committed. The code is in [desktop](desktop) and [scripts/build-desktop.mjs](scripts/build-desktop.mjs). Set `ACADEMY_USER_DATA` to point the app at a different data location, for example to try it without touching your real data.
 
 ## Using the app
 
@@ -196,15 +223,16 @@ All formulas are pure functions in [src/lib/progress.ts](src/lib/progress.ts), c
 
 ## Project layout
 
-| Path                             | Contents                                                      |
-| -------------------------------- | ------------------------------------------------------------- |
-| [src/app](src/app)               | Pages and layout (Next.js App Router)                         |
-| [src/actions](src/actions)       | Server actions: validate input, call a service, refresh pages |
-| [src/db](src/db)                 | Schema, migrations, queries and services (plain functions)    |
-| [src/lib](src/lib)               | Validation schemas, defaults, formatting helpers              |
-| [src/components](src/components) | UI components (shadcn/ui primitives live in `components/ui`)  |
-| [scripts](scripts)               | Command-line scripts: seed, demo seed, backup, reset          |
-| [tests](tests)                   | Vitest tests, run against an in-memory database               |
+| Path                             | Contents                                                                 |
+| -------------------------------- | ------------------------------------------------------------------------ |
+| [src/app](src/app)               | Pages and layout (Next.js App Router)                                    |
+| [src/actions](src/actions)       | Server actions: validate input, call a service, refresh pages            |
+| [src/db](src/db)                 | Schema, migrations, queries and services (plain functions)               |
+| [src/lib](src/lib)               | Validation schemas, defaults, formatting helpers                         |
+| [src/components](src/components) | UI components (shadcn/ui primitives live in `components/ui`)             |
+| [scripts](scripts)               | Command-line scripts: seed, demo seed, backup, reset, desktop build      |
+| [desktop](desktop)               | Electron shell for the Windows app: window, server start-up, data import |
+| [tests](tests)                   | Vitest tests, run against an in-memory database                          |
 
 Services in `src/db` take the database as a parameter, so they are tested against an in-memory SQLite database without touching your real data.
 
@@ -222,3 +250,4 @@ Services in `src/db` take the database as a parameter, so they are tested agains
 | v0.8.0  | Grade tracker and what-if calculator          |
 | v0.9.0  | Board, calendar, revision reminders           |
 | v1.0.0  | Polish: dark mode, shortcuts, quick add, docs |
+| v1.1.0  | Windows desktop app and installer             |
