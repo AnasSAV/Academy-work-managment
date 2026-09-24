@@ -82,7 +82,22 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 - **Semesters** (home page): add, edit, reorder and delete semesters. On an empty database you can load the Semester 07 starter data with one click.
 - **Modules** (semester page): name, code, credits, lecturers, colour, target grade, exam date and notes. Reorder with the arrow buttons.
 - **Chapters** (module page): type a title and press Enter to add one, or paste a list to add several at once (one per line). Rename, reorder and delete from each row.
+- **Progress**: tick Learned, Questions done, Notes made and Revised on each chapter row, or open a chapter for question counts (done / total), repeated revisions, confidence (1-5), last-reviewed date, a note and a OneNote link. Add your own activities (with a weight) under **Activities** on a module page.
+- **Settings**: the readiness split and the revise-after interval, with the formulas explained.
 - **Deleting** always asks first and lists what else would be removed with it (for example a module's chapters and assessments).
+
+## How progress is calculated
+
+All formulas are pure functions in [src/lib/progress.ts](src/lib/progress.ts), covered by tests.
+
+- **Chapter progress** is a weighted average of the chapter's activities. Default weights: Learned 40, Questions done 30, Notes made 15, Revised 15. Weights are relative (per module, editable on the module page), so adding a custom activity simply shares the total.
+  - A ticked activity counts as 100%.
+  - An unticked activity that tracks counts (Questions done) earns `done / total`. Reaching the total ticks it automatically.
+  - Otherwise it counts as 0%.
+- **Module chapter progress** is the plain average of its chapters (0% with no chapters).
+- **Past-paper progress** is `attempted / logged` (coverage) multiplied by the average score of the papers that have a score. An attempt with no score counts towards coverage only. With no papers logged it is not counted at all.
+- **Module readiness** is `chapters x 70% + past papers x 30%` by default (the split is a setting). With no past papers it equals chapter progress; with no chapters it equals past-paper progress.
+- **Revised** supports repeated revisions. Ticking it logs the first one; **Log revision** on the chapter page adds more. Each new revision sets the chapter's last-reviewed date to today.
 
 ## Project layout
 

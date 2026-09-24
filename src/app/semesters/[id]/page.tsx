@@ -6,9 +6,13 @@ import { countLabel, formatDate, formatDateRange, pluralize } from "@/lib/format
 import { MODULE_COLORS } from "@/lib/defaults";
 import { getDb } from "@/db";
 import { getSemester, listModuleSummaries } from "@/db/queries";
+import { loadModuleProgress } from "@/db/progress-queries";
 import { getSemesterDeleteImpact } from "@/db/services";
+import { getSettings } from "@/db/settings";
+import { toPercent } from "@/lib/progress";
 import { DeleteSemesterButton } from "@/components/delete-buttons";
 import { ModuleDialog } from "@/components/module-dialog";
+import { ProgressBar } from "@/components/progress-bar";
 import { MoveButtons } from "@/components/move-buttons";
 import { SemesterDialog } from "@/components/semester-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +35,11 @@ export default async function SemesterPage(props: PageProps<"/semesters/[id]">) 
   const db = getDb();
   const modules = listModuleSummaries(db, semester.id);
   const impact = getSemesterDeleteImpact(db, semester.id);
+  const progress = loadModuleProgress(
+    db,
+    modules.map((m) => m.id),
+    getSettings(db),
+  );
   const dates = formatDateRange(semester.startDate, semester.endDate);
   const nextColor = MODULE_COLORS[modules.length % MODULE_COLORS.length];
 
@@ -108,12 +117,27 @@ export default async function SemesterPage(props: PageProps<"/semesters/[id]">) 
                       </div>
                       <CardDescription>{pluralize(m.chapterCount, "chapter")}</CardDescription>
                     </CardHeader>
-                    {(details.length > 0 || m.lecturers) && (
-                      <CardContent className="text-muted-foreground space-y-1 text-sm">
-                        {details.length > 0 && <p>{details.join(" · ")}</p>}
-                        {m.lecturers && <p>Lecturers: {m.lecturers}</p>}
-                      </CardContent>
-                    )}
+                    <CardContent className="space-y-3 text-sm">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-muted-foreground">Readiness</span>
+                          <span className="tabular-nums">
+                            {toPercent(progress.get(m.id)?.readiness ?? 0)}%
+                          </span>
+                        </div>
+                        <ProgressBar
+                          value={progress.get(m.id)?.readiness ?? 0}
+                          label={`${m.name} readiness`}
+                          color={m.color}
+                        />
+                      </div>
+                      {(details.length > 0 || m.lecturers) && (
+                        <div className="text-muted-foreground space-y-1">
+                          {details.length > 0 && <p>{details.join(" · ")}</p>}
+                          {m.lecturers && <p>Lecturers: {m.lecturers}</p>}
+                        </div>
+                      )}
+                    </CardContent>
                   </Card>
                 </li>
               );

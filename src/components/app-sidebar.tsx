@@ -1,4 +1,4 @@
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, Settings } from "lucide-react";
 import Link from "next/link";
 import { getDb } from "@/db";
 import { listNav } from "@/db/queries";
@@ -36,6 +36,11 @@ export function AppSidebar() {
             ))}
           </div>
         ))}
+
+        <NavLink href="/settings" className="text-muted-foreground">
+          <Settings className="size-4" aria-hidden />
+          Settings
+        </NavLink>
       </nav>
     </aside>
   );

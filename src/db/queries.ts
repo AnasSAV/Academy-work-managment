@@ -1,6 +1,6 @@
 import { asc, count, eq } from "drizzle-orm";
 import type { Db } from "./index";
-import { chapterActivities, chapters, modules, semesters } from "./schema";
+import { activityTypes, chapterActivities, chapters, modules, semesters } from "./schema";
 
 /** Semesters with their modules (id, name, colour), for navigation. */
 export function listNav(db: Db) {
@@ -81,6 +81,28 @@ export function chapterActivityCounts(db: Db, moduleId: number) {
     .groupBy(chapterActivities.chapterId)
     .all();
   return new Map(rows.map((r) => [r.chapterId, r.n]));
+}
+
+export function getChapter(db: Db, id: number) {
+  return db
+    .select({ chapter: chapters, module: modules, semester: semesters })
+    .from(chapters)
+    .innerJoin(modules, eq(modules.id, chapters.moduleId))
+    .innerJoin(semesters, eq(semesters.id, modules.semesterId))
+    .where(eq(chapters.id, id))
+    .get();
+}
+
+/** Recorded activity rows per activity type of a module (what deleting the type would remove). */
+export function activityRecordCounts(db: Db, moduleId: number) {
+  const rows = db
+    .select({ activityTypeId: chapterActivities.activityTypeId, n: count() })
+    .from(chapterActivities)
+    .innerJoin(activityTypes, eq(activityTypes.id, chapterActivities.activityTypeId))
+    .where(eq(activityTypes.moduleId, moduleId))
+    .groupBy(chapterActivities.activityTypeId)
+    .all();
+  return new Map(rows.map((r) => [r.activityTypeId, r.n]));
 }
 
 export function countAll(db: Db) {

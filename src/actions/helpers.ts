@@ -1,6 +1,6 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { NotFoundError } from "@/db/services";
+import { NotFoundError, RuleError } from "@/db/errors";
 import { moveDirectionSchema, type MoveDirection } from "@/lib/validation/schemas";
 import type { FieldErrors } from "@/lib/validation/parse";
 
@@ -32,7 +32,7 @@ export function guard<T>(fn: () => T): ActionResult<T> {
     revalidatePath("/", "layout");
     return { ok: true, data };
   } catch (error) {
-    if (error instanceof NotFoundError) return failure(error.message);
+    if (error instanceof NotFoundError || error instanceof RuleError) return failure(error.message);
     console.error(error);
     return failure("Something went wrong. Please try again.");
   }

@@ -20,18 +20,28 @@ const optionalText = (label: string, max: number) =>
 const optionalDate = (label: string) =>
   z.preprocess(blankToNull, z.iso.date({ error: `${label} must be a valid date` }).nullable());
 
-const optionalNumber = (label: string, min: number, max: number) =>
+const optionalNumber = (label: string, min: number, max: number, opts: { int?: boolean } = {}) =>
   z.preprocess(
     (v) => {
       const b = blankToNull(v);
       return typeof b === "string" ? Number(b) : b;
     },
-    z
-      .number({ error: `${label} must be a number` })
+    (opts.int
+      ? z
+          .number({ error: `${label} must be a whole number` })
+          .int(`${label} must be a whole number`)
+      : z.number({ error: `${label} must be a number` })
+    )
       .min(min, `${label} must be at least ${min}`)
       .max(max, `${label} must be at most ${max}`)
       .nullable(),
   );
+
+const requiredNumber = (label: string, min: number, max: number, opts: { int?: boolean } = {}) =>
+  optionalNumber(label, min, max, opts).pipe(z.number({ error: `${label} is required` }));
+
+/** Checkbox: browsers send "on" when ticked and nothing when not. */
+const checkbox = z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean());
 
 export const semesterSchema = z
   .object({
@@ -79,8 +89,55 @@ export const chapterLinesSchema = z.object({
     ),
 });
 
+export const activityTypeSchema = z.object({
+  label: requiredText("Name", 50),
+  weight: requiredNumber("Weight", 0, 1000),
+  tracksCounts: checkbox,
+});
+
+export const activityCountsSchema = z
+  .object({
+    countDone: optionalNumber("Done", 0, 100000, { int: true }),
+    countTotal: optionalNumber("Total", 0, 100000, { int: true }),
+  })
+  .refine((v) => v.countTotal === null || v.countDone === null || v.countDone <= v.countTotal, {
+    path: ["countDone"],
+    error: "Done cannot be more than the total",
+  });
+
+/** OneNote links can be https:// URLs or onenote: protocol links. */
+const noteLink = z.preprocess(
+  blankToNull,
+  z
+    .string()
+    .trim()
+    .max(2000, "Link is too long")
+    .regex(/^(https?:\/\/|onenote:)/i, "Link must start with https://, http:// or onenote:")
+    .nullable(),
+);
+
+export const chapterDetailsSchema = z.object({
+  confidence: optionalNumber("Confidence", 1, 5, { int: true }),
+  lastReviewedAt: optionalDate("Last reviewed"),
+  note: optionalText("Note", 4000),
+  onenoteUrl: noteLink,
+});
+
+/** Formula settings. The form works in percent; storage uses a 0-1 fraction. */
+export const settingsSchema = z
+  .object({
+    readinessChapterPercent: requiredNumber("Chapters share", 0, 100),
+    reviseAfterDays: requiredNumber("Revise after (days)", 1, 365, { int: true }),
+  })
+  .transform((v) => ({
+    readinessChapterWeight: v.readinessChapterPercent / 100,
+    reviseAfterDays: v.reviseAfterDays,
+  }));
+
 export const moveDirectionSchema = z.enum(["up", "down"]);
 
 export type SemesterInput = z.infer<typeof semesterSchema>;
 export type ModuleInput = z.infer<typeof moduleSchema>;
+export type ActivityTypeInput = z.infer<typeof activityTypeSchema>;
+export type ChapterDetailsInput = z.infer<typeof chapterDetailsSchema>;
 export type MoveDirection = z.infer<typeof moveDirectionSchema>;

@@ -164,3 +164,75 @@ export function Field({ name, label, hint, multiline, rows = 3, className, ...re
     </div>
   );
 }
+
+interface SelectFieldProps {
+  name: string;
+  label: string;
+  options: { value: string; label: string }[];
+  defaultValue?: string;
+  hint?: string;
+}
+
+/** A labelled native select that shows the server-side validation error for its field. */
+export function SelectField({ name, label, options, defaultValue = "", hint }: SelectFieldProps) {
+  const errors = useContext(FieldErrorsContext);
+  const id = useId();
+  const error = errors[name];
+
+  return (
+    <div className="grid gap-1.5">
+      <Label htmlFor={id}>{label}</Label>
+      <select
+        id={id}
+        name={name}
+        defaultValue={defaultValue}
+        aria-invalid={!!error}
+        className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {error ? (
+        <p className="text-destructive text-xs">{error}</p>
+      ) : hint ? (
+        <p className="text-muted-foreground text-xs">{hint}</p>
+      ) : null}
+    </div>
+  );
+}
+
+/** A labelled checkbox; submits "on" when ticked and nothing otherwise. */
+export function CheckboxField({
+  name,
+  label,
+  hint,
+  defaultChecked,
+  disabled,
+}: {
+  name: string;
+  label: string;
+  hint?: string;
+  defaultChecked?: boolean;
+  disabled?: boolean;
+}) {
+  const id = useId();
+  return (
+    <div className="grid gap-1">
+      <div className="flex items-center gap-2">
+        <input
+          id={id}
+          type="checkbox"
+          name={name}
+          defaultChecked={defaultChecked}
+          disabled={disabled}
+          className="accent-primary size-4"
+        />
+        <Label htmlFor={id}>{label}</Label>
+      </div>
+      {hint && <p className="text-muted-foreground pl-6 text-xs">{hint}</p>}
+    </div>
+  );
+}

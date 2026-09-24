@@ -1,16 +1,12 @@
 import { count, eq, inArray } from "drizzle-orm";
 import type { ModuleInput, SemesterInput } from "@/lib/validation/schemas";
+import { NotFoundError } from "./errors";
 import type { Db } from "./index";
 import { createModuleWithDefaults } from "./modules";
 import { moveRow, nextPosition } from "./ordering";
 import { assessments, chapterActivities, chapters, modules, pastPapers, semesters } from "./schema";
 
-export class NotFoundError extends Error {
-  constructor(what: string) {
-    super(`${what} not found`);
-    this.name = "NotFoundError";
-  }
-}
+export { NotFoundError };
 
 type Direction = "up" | "down";
 

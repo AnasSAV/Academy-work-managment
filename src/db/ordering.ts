@@ -1,9 +1,10 @@
 import { asc, eq, max, type SQL } from "drizzle-orm";
 import type { Db } from "./index";
-import type { chapters, modules, semesters } from "./schema";
+import type { activityTypes, chapters, modules, semesters } from "./schema";
 
 /** Any table with an integer `id` and a `position` used to order siblings. */
-export type OrderedTable = typeof semesters | typeof modules | typeof chapters;
+export type OrderedTable =
+  typeof semesters | typeof modules | typeof chapters | typeof activityTypes;
 
 /** Position for a new row placed after its siblings. */
 export function nextPosition(db: Db, table: OrderedTable, siblings?: SQL): number {
