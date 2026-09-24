@@ -128,7 +128,7 @@ export function Field({ name, label, hint, multiline, rows = 3, className, ...re
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
 
   return (
-    <div className="grid gap-1.5">
+    <div className="grid content-start gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       {multiline ? (
         <Textarea
@@ -171,21 +171,30 @@ interface SelectFieldProps {
   options: { value: string; label: string }[];
   defaultValue?: string;
   hint?: string;
+  onValueChange?: (value: string) => void;
 }
 
 /** A labelled native select that shows the server-side validation error for its field. */
-export function SelectField({ name, label, options, defaultValue = "", hint }: SelectFieldProps) {
+export function SelectField({
+  name,
+  label,
+  options,
+  defaultValue = "",
+  hint,
+  onValueChange,
+}: SelectFieldProps) {
   const errors = useContext(FieldErrorsContext);
   const id = useId();
   const error = errors[name];
 
   return (
-    <div className="grid gap-1.5">
+    <div className="grid content-start gap-1.5">
       <Label htmlFor={id}>{label}</Label>
       <select
         id={id}
         name={name}
         defaultValue={defaultValue}
+        onChange={(e) => onValueChange?.(e.target.value)}
         aria-invalid={!!error}
         className="border-input bg-background focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:border-destructive h-8 w-full rounded-lg border px-2.5 text-sm outline-none focus-visible:ring-3"
       >

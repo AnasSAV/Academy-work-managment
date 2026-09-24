@@ -21,6 +21,8 @@ interface ConfirmDeleteProps<T> {
   subject: string;
   /** What else will go with it, e.g. ["10 chapters", "3 assessments"]. Empty items are skipped. */
   impact?: string[];
+  /** Replaces the default "also deletes ..." sentence when the delete has a different effect. */
+  note?: string;
   triggerLabel: ReactNode;
   triggerVariant?: "destructive" | "ghost" | "outline";
   triggerSize?: "default" | "sm" | "xs" | "icon" | "icon-sm" | "icon-xs";
@@ -34,6 +36,7 @@ interface ConfirmDeleteProps<T> {
 export function ConfirmDelete<T>({
   subject,
   impact = [],
+  note,
   triggerLabel,
   triggerVariant = "ghost",
   triggerSize = "default",
@@ -72,7 +75,9 @@ export function ConfirmDelete<T>({
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {subject}?</AlertDialogTitle>
           <AlertDialogDescription>
-            {items.length > 0 ? (
+            {note ? (
+              <>{note} This cannot be undone.</>
+            ) : items.length > 0 ? (
               <>This also permanently deletes {items.join(", ")}. This cannot be undone.</>
             ) : (
               <>This cannot be undone.</>

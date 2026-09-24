@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, or } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, or } from "drizzle-orm";
 import { NotFoundError } from "./errors";
 import type { Db } from "./index";
 import {
@@ -64,6 +64,18 @@ export function listAttachments(db: Db, ownerType: OwnerType, ownerId: number) {
     .where(and(eq(attachments.ownerType, ownerType), eq(attachments.ownerId, ownerId)))
     .orderBy(asc(attachments.kind), desc(attachments.createdAt), desc(attachments.id))
     .all();
+}
+
+/** Number of files per owner id, for a set of owners of one type. */
+export function countAttachmentsByOwner(db: Db, ownerType: OwnerType, ownerIds: number[]) {
+  if (ownerIds.length === 0) return new Map<number, number>();
+  const rows = db
+    .select({ ownerId: attachments.ownerId, n: count() })
+    .from(attachments)
+    .where(and(eq(attachments.ownerType, ownerType), inArray(attachments.ownerId, ownerIds)))
+    .groupBy(attachments.ownerId)
+    .all();
+  return new Map(rows.map((r) => [r.ownerId, r.n]));
 }
 
 /** Delete one attachment row. The caller removes the file (see `deleteStored`). */

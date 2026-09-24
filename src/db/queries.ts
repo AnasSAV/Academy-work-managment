@@ -2,10 +2,12 @@ import { and, asc, count, eq } from "drizzle-orm";
 import type { Db } from "./index";
 import {
   activityTypes,
+  assessments,
   attachments,
   chapterActivities,
   chapters,
   modules,
+  pastPapers,
   semesters,
 } from "./schema";
 
@@ -125,6 +127,13 @@ export function activityRecordCounts(db: Db, moduleId: number) {
     .groupBy(chapterActivities.activityTypeId)
     .all();
   return new Map(rows.map((r) => [r.activityTypeId, r.n]));
+}
+
+/** Row counts for a module's tabs. */
+export function moduleCounts(db: Db, moduleId: number) {
+  const n = (table: typeof chapters | typeof assessments | typeof pastPapers) =>
+    db.select({ n: count() }).from(table).where(eq(table.moduleId, moduleId)).get()!.n;
+  return { chapters: n(chapters), assessments: n(assessments), pastPapers: n(pastPapers) };
 }
 
 export function countAll(db: Db) {

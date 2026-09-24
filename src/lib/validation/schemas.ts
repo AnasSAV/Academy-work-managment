@@ -134,10 +134,96 @@ export const settingsSchema = z
     reviseAfterDays: v.reviseAfterDays,
   }));
 
+// ---- assessments, tags and past papers -----------------------------------------------------------
+
+const optionalMaxScore = (label: string) =>
+  optionalNumber(label, 0, 1_000_000).refine((v) => v === null || v > 0, {
+    error: `${label} must be above 0`,
+  });
+
+/** Tag names are entered comma-separated, so a single name cannot contain a comma. */
+const tagName = z
+  .string()
+  .trim()
+  .min(1, "Tag name is required")
+  .max(30, "Tag name must be at most 30 characters")
+  .regex(/^[^,]+$/, "Tag names cannot contain commas");
+
+export const tagSchema = z.object({
+  name: tagName,
+  description: optionalText("Description", 200),
+});
+
+/** Checkbox values arrive as a string (one ticked) or an array (several); none means empty. */
+const idList = z.preprocess(
+  (v) => (v == null ? [] : Array.isArray(v) ? v : [v]),
+  z.array(z.coerce.number().int().positive()).max(50),
+);
+
+/** "online, proctored" -> ["online", "proctored"]. */
+const newTagList = z.preprocess(
+  (v) =>
+    typeof v === "string"
+      ? v
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [],
+  z.array(tagName).max(20, "Add at most 20 tags at once"),
+);
+
+export const assessmentSchema = z
+  .object({
+    name: requiredText("Name", 150),
+    lecturer: optionalText("Lecturer", 100),
+    weight: requiredNumber("Weight", 0, 100),
+    dueDate: optionalDate("Due date"),
+    status: z
+      .enum(["not_started", "in_progress", "submitted", "graded"], { error: "Choose a status" })
+      .default("not_started"),
+    score: optionalNumber("Score", 0, 1_000_000),
+    maxScore: optionalMaxScore("Max score").transform((v) => v ?? 100),
+    workMode: z
+      .enum(["individual", "group", "unspecified"], { error: "Choose a work mode" })
+      .default("unspecified"),
+    groupSize: optionalNumber("Group size", 2, 100, { int: true }),
+    groupMembers: optionalText("Group members", 500),
+    notes: optionalText("Notes", 2000),
+    tagIds: idList,
+    newTags: newTagList,
+  })
+  .refine((v) => v.score === null || v.score <= v.maxScore, {
+    path: ["score"],
+    error: "Score cannot be more than the max score",
+  })
+  .refine((v) => v.status !== "graded" || v.score !== null, {
+    path: ["score"],
+    error: "Enter the score for a graded component",
+  });
+
+export const pastPaperSchema = z
+  .object({
+    title: requiredText("Title", 150),
+    year: optionalNumber("Year", 1990, 2100, { int: true }),
+    attempted: checkbox,
+    score: optionalNumber("Score", 0, 1_000_000),
+    maxScore: optionalMaxScore("Max score"),
+    minutesTaken: optionalNumber("Time taken", 0, 2000, { int: true }),
+    attemptedAt: optionalDate("Date attempted"),
+    notes: optionalText("Notes", 2000),
+  })
+  .refine((v) => v.score === null || v.maxScore === null || v.score <= v.maxScore, {
+    path: ["score"],
+    error: "Score cannot be more than the max score",
+  });
+
 export const moveDirectionSchema = z.enum(["up", "down"]);
 
 export type SemesterInput = z.infer<typeof semesterSchema>;
 export type ModuleInput = z.infer<typeof moduleSchema>;
 export type ActivityTypeInput = z.infer<typeof activityTypeSchema>;
+export type AssessmentInput = z.infer<typeof assessmentSchema>;
+export type PastPaperInput = z.infer<typeof pastPaperSchema>;
+export type TagInput = z.infer<typeof tagSchema>;
 export type ChapterDetailsInput = z.infer<typeof chapterDetailsSchema>;
 export type MoveDirection = z.infer<typeof moveDirectionSchema>;

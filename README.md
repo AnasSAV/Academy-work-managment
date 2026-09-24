@@ -83,6 +83,9 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 - **Modules** (semester page): name, code, credits, lecturers, colour, target grade, exam date and notes. Reorder with the arrow buttons.
 - **Chapters** (module page): type a title and press Enter to add one, or paste a list to add several at once (one per line). Rename, reorder and delete from each row.
 - **Progress**: tick Learned, Questions done, Notes made and Revised on each chapter row, or open a chapter for question counts (done / total), repeated revisions, confidence (1-5), last-reviewed date, a note and a OneNote link. Add your own activities (with a weight) under **Activities** on a module page.
+- **Assessments** (module page, Assessments tab): one row per graded component, with weight, lecturer, due date, status, score (out of any maximum) and notes. Mark each as **Individual**, **Group** (with an optional size and members note) or **Unspecified**. A warning appears whenever a module's weights do not add up to 100%.
+- **Tags**: your own labels per module (for example `*`, "online", "proctored"). Give each a description of what it means, tick tags on an assessment, or type new ones separated by commas. Filter the list by work mode and tag; the summary shows the weight per work mode.
+- **Past papers** (module page, Past papers tab): year, title, attempted or not, score, time taken, date and notes. Attach the paper and its marking scheme. Attempted papers count towards the module's readiness.
 - **Files**: upload files to a semester, module or chapter (the module page has a slot for the module outline). PDFs and images open in the app; other types (docx, pptx and so on) download. Deleting a chapter, module or semester deletes its files too, and the confirmation says how many.
 - **Settings**: the readiness split and the revise-after interval, with the formulas explained.
 - **Deleting** always asks first and lists what else would be removed with it (for example a module's chapters and assessments).
@@ -99,6 +102,16 @@ Uploads are served back through `/api/attachments/<id>`. A few deliberate safety
 - Stored paths are checked to stay inside the uploads folder.
 
 Because `data/` is git-ignored, your course files are never pushed to GitHub.
+
+## Assessment rules
+
+- **A score means it was graded.** Entering a score on an assessment sets its status to Graded (and marking it Graded requires a score). Scores cannot exceed the maximum, which defaults to 100.
+- **Group details only apply to group work.** Group size and members are kept only when the work mode is Group.
+- **Weights are percentages of the module grade** (0 to 100 each). They are checked against 100% as a whole, with a tolerance for rounding, and the warning names how much is missing or over.
+- **A score on a past paper means it was attempted.** A scored paper with no maximum is out of 100, and a paper that was not attempted carries no score, time or date.
+- **Tags are unique per module, ignoring case.** Typing a name that already exists reuses that tag. Deleting a tag removes it from assessments but keeps the assessments.
+
+The [Advanced ML table from the brief](src/lib/fixtures/advanced-ml.ts) is the test fixture for these rules, and `npm run seed:demo` loads it (with `*` as a tag) if you want demo data.
 
 ## How progress is calculated
 

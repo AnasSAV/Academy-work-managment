@@ -2,8 +2,10 @@
 
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { deleteAssessmentAction } from "@/actions/assessments";
 import { deleteChapterAction } from "@/actions/chapters";
 import { deleteModuleAction } from "@/actions/modules";
+import { deletePastPaperAction } from "@/actions/past-papers";
 import { deleteSemesterAction } from "@/actions/semesters";
 import { ConfirmDelete } from "@/components/confirm-delete";
 
@@ -79,6 +81,50 @@ export function DeleteChapterButton({
       triggerAriaLabel={`Delete ${title}`}
       successMessage="Chapter deleted"
       action={() => deleteChapterAction(id)}
+    />
+  );
+}
+
+export function DeleteAssessmentButton({
+  id,
+  name,
+  impact,
+}: {
+  id: number;
+  name: string;
+  impact: string[];
+}) {
+  return (
+    <ConfirmDelete
+      subject={`assessment "${name}"`}
+      impact={impact}
+      triggerLabel={<Trash2 />}
+      triggerSize="icon-xs"
+      triggerAriaLabel={`Delete ${name}`}
+      successMessage="Assessment deleted"
+      action={() => deleteAssessmentAction(id)}
+    />
+  );
+}
+
+export function DeletePastPaperButton({
+  id,
+  title,
+  impact,
+}: {
+  id: number;
+  title: string;
+  impact: string[];
+}) {
+  return (
+    <ConfirmDelete
+      subject={`past paper "${title}"`}
+      impact={impact}
+      triggerLabel={<Trash2 />}
+      triggerSize="icon-xs"
+      triggerAriaLabel={`Delete ${title}`}
+      successMessage="Past paper deleted"
+      action={() => deletePastPaperAction(id)}
     />
   );
 }
