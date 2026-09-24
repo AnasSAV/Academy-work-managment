@@ -9,13 +9,14 @@ interface ModuleTabsProps {
   counts: { chapters: number; assessments: number; pastPapers: number };
 }
 
-/** Sub-navigation for a module: chapters, assessments and past papers. */
+/** Sub-navigation for a module: chapters, assessments, grades, past papers and insights. */
 export function ModuleTabs({ moduleId, counts }: ModuleTabsProps) {
   const pathname = usePathname();
   const base = `/modules/${moduleId}`;
   const tabs = [
     { href: base, label: "Chapters", count: counts.chapters },
     { href: `${base}/assessments`, label: "Assessments", count: counts.assessments },
+    { href: `${base}/grades`, label: "Grades", count: null },
     { href: `${base}/papers`, label: "Past papers", count: counts.pastPapers },
     { href: `${base}/insights`, label: "Insights", count: null },
   ];

@@ -87,6 +87,7 @@ The schema is defined in [src/db/schema.ts](src/db/schema.ts). Migrations are ge
 - **Insights** (module page, Insights tab): progress per activity, a past-paper score trend (with your target grade as a reference line) and the assessment weight split by status.
 - **Assessments** (module page, Assessments tab): one row per graded component, with weight, lecturer, due date, status, score (out of any maximum) and notes. Mark each as **Individual**, **Group** (with an optional size and members note) or **Unspecified**. A warning appears whenever a module's weights do not add up to 100%.
 - **Tags**: your own labels per module (for example `*`, "online", "proctored"). Give each a description of what it means, tick tags on an assessment, or type new ones separated by commas. Filter the list by work mode and tag; the summary shows the weight per work mode.
+- **Grades** (module page, Grades tab): your grade so far, the average on graded work, the weight still to come, and the best you can still reach. Set a target grade on the module and it says what average you need on the rest, or that the target is already secured, out of reach, or missed. The **What if?** calculator lets you try any target and any scores on the work that is left. Nothing typed there is saved.
 - **Past papers** (module page, Past papers tab): year, title, attempted or not, score, time taken, date and notes. Attach the paper and its marking scheme. Attempted papers count towards the module's readiness.
 - **Files**: upload files to a semester, module or chapter (the module page has a slot for the module outline). PDFs and images open in the app; other types (docx, pptx and so on) download. Deleting a chapter, module or semester deletes its files too, and the confirmation says how many.
 - **Settings**: the readiness split and the revise-after interval, with the formulas explained.
@@ -114,6 +115,16 @@ Uploads are served back through `/api/attachments/<id>`. A few deliberate safety
 - Stored paths are checked to stay inside the uploads folder.
 
 Because `data/` is git-ignored, your course files are never pushed to GitHub.
+
+## Grade calculations
+
+All of this lives in [src/lib/grades.ts](src/lib/grades.ts), tested against the Advanced ML table.
+
+- **Points.** A component is worth its weight in points: scoring 80% on a 10% component earns 8 points. Only components with a score count as graded; the rest are outstanding.
+- **Grade so far** is the points earned out of the whole module grade. **Average on graded work** is the points earned divided by the weight already graded.
+- **Needed average** to reach a target is `(target points - points earned) / outstanding weight`. If that is more than 100% the target is out of reach, and the tracker shows the best case instead. If the points earned already meet the target, it is secured.
+- **Weights that do not total 100%.** Weight you have not allocated to any component can never be earned, so it is shown apart and left out of what is still available. If the weights go over 100%, the grade is measured out of that total so it can never pass 100%. Either way the tracker warns you.
+- **Best possible** assumes full marks on everything outstanding. **At your current pace** assumes the rest scores your current average.
 
 ## Assessment rules
 
